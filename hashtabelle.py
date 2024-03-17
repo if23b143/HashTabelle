@@ -12,17 +12,27 @@ class class_stock:
         self.kuerzel = kuerzel
         
     def read_csv(self, filename):
-        print("Reading CSV from file:", filename)
+        #print("Reading CSV from file:", filename)
         with open(filename, 'r') as file:
             csv_reader = csv.reader(file)
+            #next(csv_reader) #skipped die erste Zeile
             for row in csv_reader:
-                print("Read row:", row)
+                #print("Read row:", row)
                 self.data.append(row)
-        print("CSV data read successfully. Data:", self.data)
+        #print("CSV data read successfully. Data:", self.data)
 
     def clear_data(self):
         self.data = []
+        self.name = 0
+        self.WKN = 0
+        self.kuerzel = 0
 
+    def delete_class(self):
+        del self.data
+        del self.name
+        del self.WKN
+        del self.kuerzel
+        del self
 
 def add():
    
@@ -62,7 +72,38 @@ def add():
 
 
 def delete():
+
+    kuerzel = input("Wie heißt das Kürzel: ")
+    string_to_int = sum(ord(character) for character in kuerzel)
+    hashzahl = string_to_int % 1301
+
+    if hashtabelle[hashzahl] != 0 and hashtabelle[hashzahl].kuerzel == kuerzel:
+        print("goodbye")
+        hashtabelle[hashzahl].delete_class()
+        hashtabelle[hashzahl] = 0
+        print("goodbe")
+    elif hashtabelle[hashzahl] != 0:
+        # quadratische sondierung
+        for i in range(1301):
+            # erstelle eine neue hashzahl
+            t = (hashzahl + i * i) % 1301
+            if (hashtabelle[t].kuerzel == kuerzel):
+                # Break the loop after
+                # inserting the value
+                # in the table
+               
+                # array auf der stelle "hash" wird hineingefügt
+                print("hello")
+                hashtabelle[t].delete_class()
+                hashtabelle[t]
+                print("hhel")
+                break
+    else:
+        print("Es wurde kein Kuerzel gefunden!")
+
+
     print("2. DEL")
+
 
 
 def importieren():
@@ -82,8 +123,12 @@ def importieren():
     string_to_int = sum(ord(character) for character in kuerzel)
     hashzahl = string_to_int % 1301
 
-
+    #wenn kein objekt --> hashtabelle gibt fehler aus
     if hashtabelle[hashzahl] != 0 and hashtabelle[hashzahl].kuerzel == kuerzel:
+        print("goodbye")
+        hashtabelle[hashzahl].read_csv(file_path)
+        print("goodbye")
+    elif hashtabelle[hashzahl] != 0:
         # quadratische sondierung
         for i in range(1301):
             # erstelle eine neue hashzahl
@@ -92,20 +137,19 @@ def importieren():
                 # Break the loop after
                 # inserting the value
                 # in the table
-                print("goodbye")
-                hashtabelle[hashzahl].read_csv(file_path)
-                print("goodbye")
+               
+                # array auf der stelle "hash" wird hineingefügt
+                print("hello")
+                hashtabelle[t].read_csv(file_path)
+                print("hhel")
                 break
     else:
-        # array auf der stelle "hash" wird hineingefügt
-        print("hello")
-        hashtabelle[hashzahl].read_csv(file_path)
-        print("hhel")
+        print("Es wurde kein Kuerzel gefunden!")
 
-    print(hashtabelle[hashzahl].data)
-    print(hashtabelle[hashzahl].name)
-    print(hashtabelle[hashzahl].WKN)
-    print(hashtabelle[hashzahl].kuerzel)
+    # print(hashtabelle[hashzahl].data)
+    # print(hashtabelle[hashzahl].name)
+    # print(hashtabelle[hashzahl].WKN)
+    # print(hashtabelle[hashzahl].kuerzel)
     #stock_backlog.append(userinput)
     #print(stock_backlog)
 
