@@ -1,16 +1,21 @@
 import os
 import csv
+import matplotlib.pyplot as plt
+
+#globale variable, damit load richtig funktioniert
+filename = 'hashtabelle.csv'
 
 
 class class_stock:
-
-
     def __init__(self, name, WKN, kuerzel):
         self.data = []
         self.name = name
         self.WKN = WKN
         self.kuerzel = kuerzel
-        
+
+    def to_dict(self):
+        return{"data": self.data, "name": self.name, "WKN": self.WKN, "kuerzel": self.kuerzel}    
+    
     def read_csv(self, filename):
         #print("Reading CSV from file:", filename)
         with open(filename, 'r') as file:
@@ -33,6 +38,14 @@ class class_stock:
         del self.WKN
         del self.kuerzel
         del self
+
+
+def my_serializer(obj):
+    if hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    else:
+        return obj
+
 
 def add():
    
@@ -68,7 +81,7 @@ def add():
         # array auf der stelle "hash" wird hineingefügt
         hashtabelle[hashzahl] = stock
 
-    print(hashtabelle[hashzahl])
+  
 
 
 def delete():
@@ -102,9 +115,6 @@ def delete():
         print("Es wurde kein Kuerzel gefunden!")
 
 
-    print("2. DEL")
-
-
 
 def importieren():
     # Get the current directory
@@ -128,6 +138,10 @@ def importieren():
         print("goodbye")
         hashtabelle[hashzahl].read_csv(file_path)
         print("goodbye")
+        for i in hashtabelle[hashzahl].data:
+            hashtabelle[hashzahl].data
+
+
     elif hashtabelle[hashzahl] != 0:
         # quadratische sondierung
         for i in range(1301):
@@ -167,26 +181,132 @@ def importieren():
 
 
 def search():
-    print("4. SEARCH")
+    kuerzel = input("Wie heißt das Kürzel: ")
+    string_to_int = sum(ord(character) for character in kuerzel)
+    hashzahl = string_to_int % 1301
+
+    if hashtabelle[hashzahl] != 0 and hashtabelle[hashzahl].kuerzel == kuerzel:
+       #gibt den letzten Eintrag
+       print("Aktuellster Kurs:", hashtabelle[hashzahl].data[-1])
+    elif hashtabelle[hashzahl] != 0:
+        # quadratische sondierung
+        for i in range(1301):
+            # erstelle eine neue hashzahl
+            t = (hashzahl + i * i) % 1301
+            if (hashtabelle[t].kuerzel == kuerzel):
+                # Break the loop after
+                # inserting the value
+                # in the table
+               
+                # array auf der stelle "hash" wird hineingefügt
+                
+                
+                print("Aktuellster Kurs:", hashtabelle[hashzahl].data[-1])
+                break
+    else:
+        print("Es wurde kein Kuerzel gefunden!")
 
 
 def plot():
-    print("5. PLOT")
+    kuerzel = input("Welches Kürzel möchten Sie plotten? ")
+    string_to_int = sum(ord(character) for character in kuerzel)
+    hashzahl = string_to_int % 1301
+    
+    stock = None
 
+    if hashtabelle[hashzahl] != 0 and hashtabelle[hashzahl].kuerzel == kuerzel:
+        stock = hashtabelle[hashzahl]
+    elif hashtabelle[hashzahl] != 0:
+        for i in range(1301):
+            t = (hashzahl + i * i) % 1301
+            if hashtabelle[t] != 0 and hashtabelle[t].kuerzel == kuerzel:
+                stock = hashtabelle[t]
+                break
+    
+    if stock is not None and stock.data:
+        try:
+            dates = []
+            adj_closes = []
+            for row in stock.data:
+                try:
+                    adj_close = float(row[1])
+                    dates.append(row[0])
+                    adj_closes.append(adj_close)
+                except ValueError:
+                    continue
+
+            if dates and adj_closes:
+                plt.figure(figsize=(10, 6))
+                plt.plot(dates, adj_closes, color='blue', label=kuerzel)
+                
+                plt.xlabel('Date')
+                plt.ylabel('Adj Close')
+                plt.title(f'{kuerzel} Aktienkursverlauf')
+                
+                plt.grid(True)
+                plt.legend()
+                plt.show()
+            else:
+                print("Keine gültigen Daten zum Plotten vorhanden.")
+        except Exception as e:
+            print(f"Ein Fehler ist aufgetreten: {e}")
+    else:
+        print("Es wurden keine Daten für das angegebene Kürzel gefunden oder das Kürzel existiert nicht.")
 
 def save():
-    print("6. SAVE")
+    #bearbeitet das array in ein besseres objeke?
+    serialized_objects = [my_serializer(obj) for obj in hashtabelle]
+    headers = ['data', 'name', 'WKN', 'kuerzel']
+
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
+        writer.writeheader()
+        for item in serialized_objects:
+            #wenn "item" ein dict-object ist: dann True
+            if isinstance(item, dict):
+                writer.writerow(item)
+            else:
+                writer.writerow({'data': '[]', 'name': '', 'WKN': 0, 'kuerzel': ''})
+    print(f'Data saved to {filename}')
 
 
 def load():
-    print("7. LOAD")
+    #cleared die gesamte hashtabelle vor dem loaden
+    global hashtabelle
+    hashtabelle = [0] * 1301
+    try:
+        with open(filename, mode='r') as file:
+            csv_reader = csv.DictReader(file)
+            index = 0
+            for row in csv_reader:
+                if row['name'] == '' and row['WKN'] == '0' and row['kuerzel'] == '':
+                    #wenn es leer ist
+                    hashtabelle[index] = 0
+                else:
+                    #wenn dateien sind
+                    stock = class_stock(row['name'], row['WKN'], row['kuerzel'])
+                    if row['data'] != '[]':
+                        stock.data = eval(row['data'])
+                    hashtabelle[index] = stock
+                index += 1
+        print("Data loaded successfully.")
+    except FileNotFoundError:
+        print(f"File {filename} not found. Load operation aborted.")
 
-stock_backlog = []
+
 
 hashtabelle = [0] * 1301
 #TODO BESSERE WHILE SCHLEIFE ERFINDEN
 zahl = 1
 while zahl == 1:
+    print("1. Eine Aktie hinzufügen")
+    print("2. Eine Aktie löschen")
+    print("3. Aktie aus csv importieren")
+    print("4. Die aktuellsten Eintrage einer Aktie suchen")
+    print("5. Eine Aktie graphisch darstellen")
+    print("6. Die gesamte Tabelle speichern")
+    print("7. Eine Tabelle laden")
+    print("8. Programm beenden")
     numberinput = int(input("Geben Sie eine Zahl ein: "))
     match numberinput:
         case 1:
